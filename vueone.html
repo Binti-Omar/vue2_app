@@ -9,6 +9,10 @@
     <div id="app">
         {{ external }} <br>
         {{ intro }}
+
+        <ul>
+            <li v-for="stock in ibm_stock"> {{ stock }} </li>
+        </ul>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.2.0/vue.js"></script>
@@ -26,10 +30,11 @@
                 intro_method(){
                     this.intro = "Update by method"
                 },
-                // make an asyncronous request
+                // make an asyncronous request -- which is a request where a program can start a task and continue doing other things without waiting for that task to finish.
                 async ibm_stock_call(){
                     const results = await axios.get("https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=IBM&interval=5min&apikey=demo")
                     console.log(results.data["Time Series (5min)"])
+                    this.ibm_stock = results.data["Time Series (5min)"]
                 }
             },
             // mounted constructor --- it runs by default whether called or not
