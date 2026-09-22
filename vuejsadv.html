@@ -41,6 +41,7 @@
                     this.marks = this.marks - 1;
                 },
                 async api_call() {
+                    // axios gets data from an api to give to the variable const res
                     const res = await axios.get("http://127.0.0.1:5000")
                     console.log("result is", res.data);
                     this.api = res.data["Flask API"]

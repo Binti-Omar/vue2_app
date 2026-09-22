@@ -1,18 +1,53 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
 </head>
+
 <body>
     <div id="app">
-        {{ external }} <br>
-        {{ intro }}
 
-        <ul>
-            <li v-for="stock in ibm_stock"> {{ stock }} </li>
-        </ul>
+        {{ external }} <br>
+        {{ intro }} <br> <br>
+
+        <!-- directive is anything starting with an @ -->
+        <!-- @submit.prevent is used to handle a form submission without allowing the browser to perform its default action -->
+         <!-- v-model is for binding data  -->
+        <form @submit.prevent="save_name">
+            <label for="">First Name</label> <br>
+            <input type="text" v-model="form.first_name"> <br>
+            <label for="">Last Name</label> <br>
+            <input type="text" v-model="form.last_name"> <br>
+            <button type="submit">Save</button>
+        </form> <br> 
+
+        <h1>Full Name : {{ full_name }} </h1>
+
+        <br> <br>
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>Open</th>
+                    <th>High</th>
+                    <th>Low</th>
+                    <th>Close</th>
+                    <th>Volume</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="stock in ibm_stock">
+                    <td> {{ stock["1. open"] }} </td>
+                    <td> {{ stock["2. high"] }} </td>
+                    <td> {{ stock["3. low"] }} </td>
+                    <td> {{ stock["4. close"] }} </td>
+                    <td> {{ stock["5. volume"] }} </td>
+                </tr>
+            </tbody>
+        </table>
+
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.2.0/vue.js"></script>
@@ -20,29 +55,58 @@
 
     <script>
         new Vue({
-            el : "#app",
-            data : {
-                external : "Testing APIS",
-                intro : "Welcome to APIS",
-                ibm_stock : []
+            el: "#app",
+            data: {
+                external: "Testing APIS",
+                intro: "Welcome to APIS",
+                ibm_stock: [],
+                form : {
+                    first_name : "",
+                    last_name : ""
+                },
+                full_name : ""
             },
-            methods : {
-                intro_method(){
+            methods: {
+                intro_method() {
+                    // this is used because it is part of a class
                     this.intro = "Update by method"
                 },
                 // make an asyncronous request -- which is a request where a program can start a task and continue doing other things without waiting for that task to finish.
-                async ibm_stock_call(){
+                // await → wait for this particular asynchronous operation
+                // axios gets data from an api to give to the variable const results
+                async ibm_stock_call() {
                     const results = await axios.get("https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=IBM&interval=5min&apikey=demo")
                     console.log(results.data["Time Series (5min)"])
                     this.ibm_stock = results.data["Time Series (5min)"]
+
+                    console.log(typeof (this.ibm_stock))
+                },
+                save_name(){
+                    console.log("First name is ",this.form.first_name)
+                    console.log("Last name is ",this.form.last_name)
+
+                    // storing information in the local storage using setitem
+                    localStorage.setItem("first_name", this.form.first_name)
+                    localStorage.setItem("last_name", this.form.last_name)
+
+                    this.form.first_name =""
+                    this.form.last_name =""
+
+                    // getting information from the storage using getitem
+                    this.full_name = localStorage.getItem("first_name") + " " + localStorage.getItem("last_name")
+
+                    // refreshes the page
+                    window.location.reload()
                 }
             },
             // mounted constructor --- it runs by default whether called or not
-            mounted (){
+            mounted() {
                 this.intro_method();
                 this.ibm_stock_call();
+                this.full_name = localStorage.getItem("first_name") + " " + localStorage.getItem("last_name");
             }
         });
     </script>
 </body>
+
 </html>
