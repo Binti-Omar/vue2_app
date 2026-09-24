@@ -15,6 +15,7 @@
         <button :disabled="marks <= 0" @click="subtract_marks">Subtract</button>
         <br>
         {{ marks }} <br>
+        <!-- @click is for calling a function its not a must we call it in mounted -->
         <button @click="api_call">Api Call</button>
         <p>API : {{ api }}</p>
 
@@ -34,6 +35,7 @@
                 api : " "
             },
             methods: {
+                // this helps access variables in vue's data
                 add_marks() {
                     this.marks = this.marks + 1;
                 },

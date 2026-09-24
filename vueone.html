@@ -15,14 +15,14 @@
 
         <!-- directive is anything starting with an @ -->
         <!-- @submit.prevent is used to handle a form submission without allowing the browser to perform its default action -->
-         <!-- v-model is for binding data  -->
+        <!-- v-model is for binding data  -->
         <form @submit.prevent="save_name">
             <label for="">First Name</label> <br>
             <input type="text" v-model="form.first_name"> <br>
             <label for="">Last Name</label> <br>
             <input type="text" v-model="form.last_name"> <br>
             <button type="submit">Save</button>
-        </form> <br> 
+        </form> <br>
 
         <h1>Full Name : {{ full_name }} </h1>
 
@@ -55,16 +55,17 @@
 
     <script>
         new Vue({
+            // el: "#app" This tells Vue to  take control of the HTML inside #app.
             el: "#app",
             data: {
                 external: "Testing APIS",
                 intro: "Welcome to APIS",
                 ibm_stock: [],
-                form : {
-                    first_name : "",
-                    last_name : ""
+                form: {
+                    first_name: "",
+                    last_name: ""
                 },
-                full_name : ""
+                full_name: ""
             },
             methods: {
                 intro_method() {
@@ -81,16 +82,16 @@
 
                     console.log(typeof (this.ibm_stock))
                 },
-                save_name(){
-                    console.log("First name is ",this.form.first_name)
-                    console.log("Last name is ",this.form.last_name)
+                save_name() {
+                    console.log("First name is ", this.form.first_name)
+                    console.log("Last name is ", this.form.last_name)
 
                     // storing information in the local storage using setitem
                     localStorage.setItem("first_name", this.form.first_name)
                     localStorage.setItem("last_name", this.form.last_name)
 
-                    this.form.first_name =""
-                    this.form.last_name =""
+                    this.form.first_name = ""
+                    this.form.last_name = ""
 
                     // getting information from the storage using getitem
                     this.full_name = localStorage.getItem("first_name") + " " + localStorage.getItem("last_name")
