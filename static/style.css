@@ -1,3 +1,4 @@
+/* navbar */
 .navbar{
     background-color:darkgrey;
     color: antiquewhite;
@@ -31,6 +32,7 @@ color: black;
     border-radius: 40px;
     border: black;
 }
+/* index page */
 .index { 
     margin: 0; 
     background-color: #f4f6f8; 
@@ -73,6 +75,7 @@ color: black;
 .home-text p { 
     font-size: 22px; 
 }
+/* register page */
 .register-container {
     border: none;
     width: 400px;
@@ -106,6 +109,7 @@ color: black;
 .register {
     background-color: #f4f6f8;
 }
+/* login page */
 .login{
     min-height: 100vh; 
     background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url("images/login.jpg"); 
@@ -142,4 +146,58 @@ color: black;
 }
 .login-container .alert { 
     margin-top: 20px; 
+}
+/* products page */
+body {
+    margin: 0;
+    padding-top: 75px;
+    background-color: #f7f9fc;
+    font-family: Arial, sans-serif;
+}
+#app {
+    width: 90%;
+    max-width: 1200px;
+    margin: 30px auto;
+}
+#app > form {
+    background-color: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
+}
+.form-control {
+    border: 1px solid #d5dce5;
+    border-radius: 7px;
+}
+.form-control:focus {
+    border-color: #063b70;
+    box-shadow: 0 0 0 2px rgba(6, 59, 112, 0.15);
+}
+.btn-primary {
+    background-color: #063b70;
+    border-color: #063b70;
+}
+.btn-primary:hover {
+    background-color: #ff7a00;
+    border-color: #ff7a00;
+}
+#mytable {
+    background-color: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.1);
+}
+
+#mytable thead {
+    background-color: #063b70;
+    color: white;
+}
+#mytable th,
+#mytable td {
+    padding: 14px;
+    vertical-align: middle;
+}
+#mytable tbody tr:hover {
+    background-color: #fff5eb;
 }

@@ -4,9 +4,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Product</title>
+    <title>Products</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 </head>
 
 <body>
@@ -44,51 +45,139 @@
         </div>
     </nav>
 
-    <div>
-        <form>
+    <div id="app">
+        <form >
             <div class="mb-3">
                 <label for="p_name" class="form-label">Product Name</label>
-                <input type="text" class="form-control" id="p_name" placeholder="Enter the Product Name">
+                <input type="text" v-model="product_name" class="form-control" id="p_name" placeholder="Enter the Product Name">
             </div>
             <div class="mb-3">
                 <label for="b_price" class="form-label">Buying Price</label>
-                <input type="number" class="form-control" id="b_price" placeholder="Enter the Buying Price">
+                <input type="number" v-model="buying_price" class="form-control" id="b_price" placeholder="Enter the Buying Price">
             </div>
             <div class="mb-3">
                 <label for="s_price" class="form-label">Selling Price</label>
-                <input type="number" class="form-control" id="s_price" placeholder="Enter the Selling Price">
+                <input type="number" v-model="selling_price" class="form-control" id="s_price" placeholder="Enter the Selling Price">
             </div>
-            <button type="submit" class="btn btn-primary">Submit</button>
-        </form>
-    </div>
+            <button @click="add_products" type="submit" class="btn btn-primary">Add Products</button>
 
-    <div>
-        <table class="table">
+            <div class="alert alert-success" v-if="alertSuccessShow">
+                {{ alert_message }}
+            </div>
+
+            <div class="alert alert-danger" v-if="alertDangerShow">
+                {{ alert_message }}
+            </div>
+        </form>
+    
+        <table class="table" id="mytable">
             <thead>
                 <tr>
                     <th scope="col">ID</th>
                     <th scope="col">Product Name</th>
                     <th scope="col">Buying Price</th>
                     <th scope="col">Selling Price</th>
+                    <th scope="col">Created at</th>
+                    <th scope="col">Actions</th>
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <th scope="row">1</th>
-                    <td>Phone</td>
-                    <td>20000</td>
-                    <td>23500</td>
+                <tr v-for="prod in products" :key="prod.id">
+                    <td>{{ prod.id }}</td>
+                    <td>{{ prod.product_name }}</td>
+                    <td>{{ prod.buying_price }}</td>
+                    <td>{{ prod.selling_price }}</td>
+                    <td><button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                            data-bs-target="#editproduct'editproduct' + prod.id">
+                            Edit
+                        </button>
+                        <!-- Modal -->
+                        <div class="modal fade" :id="'editproduct' + prod.id" tabindex="-1"
+                            aria-labelledby="exampleModalLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h1 class="modal-title fs-5" id="exampleModalLabel">Products</h1>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                            aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <form>
+                                            <div class="mb-3">
+                                                <label for="name" class="form-label">Product Name</label>
+                                                <input
+                                                type="text" :value=" prod.product_name" class="form-control" id="name">
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="b_price" class="form-label">Buying Price</label>
+                                                <input type="number" :value="prod.buying_price"  class="form-control" id="b_price">
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="s_price" class="form-label">Selling Price</label>
+                                                <input type="number" :value="prod.selling_price" class="form-control" id="s_price">
+                                            </div>
+                                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                                        </form>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary"
+                                            data-bs-dismiss="modal">Close</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
                 </tr>
             </tbody>
         </table>
     </div>
 
+    <!-- jQuery CDN -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- datatables -->
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <!-- vue cdn link -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.2.0/vue.js"></script>
+    <!-- axios link -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.25.0/axios.js"></script>
+    <!-- bootstrap link -->
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
         integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
         crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js"
         integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y"
         crossorigin="anonymous"></script>
+    <!-- <script>
+        new DataTable('#mytable');
+    </script> -->
+    <script>
+        new Vue({
+            el : "#app",
+            data : {
+                product_name : "",
+                buying_price : "",
+                selling_price : "",
+                alert_message: "",
+                alertSuccessShow: false,
+                alertDangerShow: false,
+                products: []
+            },
+            methods : {
+                async add_products(){
+                    if(this.product_name === "" || this.buying_price === "" || this.selling_price === ""){
+                        alertDangerShow = true
+                        alertSuccessShow = false
+                        alert_message = "All fields must be filled!!!"
+                        return
+                    }
+                    await axios.get("http://127.0.0.1:5000/products",{
+                       console
+                    })
+                }
+            }
+        });
+    </script>
+
 </body>
 
 </html>
