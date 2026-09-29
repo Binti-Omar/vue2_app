@@ -46,7 +46,7 @@
     </nav>
 
     <div id="app">
-        <form >
+        <form @submit.prevent="add_products">
             <div class="mb-3">
                 <label for="p_name" class="form-label">Product Name</label>
                 <input type="text" v-model="product_name" class="form-control" id="p_name" placeholder="Enter the Product Name">
@@ -157,12 +157,19 @@
                 product_name : "",
                 buying_price : "",
                 selling_price : "",
+                user_name : "",
                 alert_message: "",
                 alertSuccessShow: false,
                 alertDangerShow: false,
                 products: []
             },
             methods : {
+                //headers is a vue method for called when
+                headers (){
+                    return{
+                        Authorisation : `Bearer $ {localstorage.getItem("token")}`
+                    }
+                },
                 async add_products(){
                     if(this.product_name === "" || this.buying_price === "" || this.selling_price === ""){
                         alertDangerShow = true
@@ -170,10 +177,18 @@
                         alert_message = "All fields must be filled!!!"
                         return
                     }
-                    await axios.get("http://127.0.0.1:5000/products",{
+                    await axios.post("http://127.0.0.1:5000/products",{
                        console
                     })
                 }
+            },
+            mounted(){
+                if(!localStorage.getItem("token")){
+                    window.location.href = "login.html"
+                    return
+                }
+                const user = JSON.parse(localStorage.getItem("user") || "{}")
+                this.user_name = user.full_name || user.email || "" 
             }
         });
     </script>
