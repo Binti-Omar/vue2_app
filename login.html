@@ -56,7 +56,7 @@
                 <input type="password" v-model="password" class="form-control" id="password"
                     placeholder="Enter your password">
             </div>
-            <button @click="login_user" type="submit" class="btn btn-primary">Login</button>
+            <button type="submit" class="btn btn-primary">Login</button>
 
             <div class="alert alert-success" v-if="alertSuccessShow">
                 {{ alert_message }}
@@ -107,25 +107,30 @@
                         .then((response) => {
                             this.alertDangerShow = false;
                             console.log(response.data)
+                            console.log(response.data.user)
+
                             this.alertSuccessShow = true;
                             this.alert_message = "Successfully login"
                             console.log(response.data.token)
+
                             localStorage.setItem("token", response.data.token)
                             localStorage.setItem("user",JSON.stringify(response.data.user))
+
                             window.location.href = "index.html"
                         }
                         )
                         .catch((error) => {
                             this.alertDangerShow = true;
                             console.log(error.data)
+                            
                             this.alertSuccessShow = false;
                             this.alert_message = error.response?.data?.message || "Login failed"
                         }
                         )
                 },
-                mounted() {
-                    if (localStorage.getItem("token") != null) {
-                        window.location.href = "index.html"
+            mounted() {
+                if (localStorage.getItem("token") != null) {
+                     window.location.href = "index.html"
                     }
                 }
             }

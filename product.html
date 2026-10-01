@@ -46,7 +46,7 @@
     </nav>
 
     <div id="app">
-        <form @submit.prevent="add_products">
+        <form>
             <div class="mb-3">
                 <label for="p_name" class="form-label">Product Name</label>
                 <input type="text" v-model="product_name" class="form-control" id="p_name"
@@ -62,7 +62,7 @@
                 <input type="number" v-model="selling_price" class="form-control" id="s_price"
                     placeholder="Enter the Selling Price">
             </div>
-            <button type="submit" class="btn btn-primary">Add Products</button>
+            <button @click="add_products" type="submit" class="btn btn-primary">Add Products</button>
 
             <div class="alert alert-success" v-if="alertSuccessShow">
                 {{ alert_message }}
@@ -170,8 +170,8 @@
                 products: []
             },
             methods: {
-                //headers is a vue method for called when
-                headers() {
+                //headers is a vue method for called when  --- used in products and sales page
+                getHeaders() {
                     return {
                         Authorization: `Bearer ${localStorage.getItem("token")}`
                     }
@@ -186,30 +186,38 @@
                     try {
                         const response = await axios.post("http://127.0.0.1:5000/products", {
                             product_name: this.product_name,
-                            buying_price: this.buying_price,
-                            selling_price: this.selling_price
+                            // we are converting it into a float sice in the backend models we have a constraint float
+                            buying_price: parseFloat(this.buying_price),
+                            selling_price: parseFloat(this.selling_price)
                         }, {
-                            headers: this.headers()
+                            // tells the backend request to accept the request and it has the token required
+                            headers: this.getHeaders()
                         })
                         this.alertSuccessShow = true
                         this.alertDangerShow = false
                         this.alert_message = "Product added successfully!"
+                        // to avoid posting the same data twice
+                        this.full_name = ""
+                        this.buying_price = ""
+                        this.selling_price = ""
 
                         console.log(response.data)
                     } catch (error)  {
                         this.alertDangerShow = true;
                         console.log(error.data)
+
                         this.alertSuccessShow = false;
-                        this.alert_message = error.response?.data?.message || "Failed to add product."
+                        this.alert_message = error.response?.data?.message || "Failed to add a product."
                         }
                     
                 }
             },
             mounted() {
                 if (!localStorage.getItem("token")) {
-                    window.location.href = "login.html"
+                    window.location.href = "login.html";
                     return
                 }
+                // .parse converts json string into object format sice local storage only accepts strings and text
                 const user = JSON.parse(localStorage.getItem("user") || "{}")
                 this.user_name = user.full_name || user.email || ""
             }

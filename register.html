@@ -72,7 +72,7 @@
                 <input type="tel" v-model="phone_number" class="form-control" id="number"
                     placeholder="Enter your phone number">
             </div>
-            <button @click="register_user" type="submit" class="btn register-btn">Register Here</button>
+            <button type="submit" class="btn register-btn">Register Here</button>
 
             <div class="alert alert-success" v-if="alertSuccessShow">
                 {{ alert_message }}
@@ -131,11 +131,16 @@
                         .then((response) => {
                             this.alertDangerShow = false;
                             console.log(response.data)
+
                             this.alertSuccessShow = true;
                             this.alert_message = "Successfully registered"
                             console.log(response.data.token)
+
                             localStorage.setItem("token", response.data.token)
-                            localStorage.setItem("user",JSON.stringify(response.data.user))
+                            //json.stringify converts json into string localstorage takes only strings and text
+                            localStorage.setItem("user", JSON.stringify({
+                            }))
+
                             window.location.href = "index.html"
                         }
                         )
@@ -143,6 +148,7 @@
                         .catch((error) => {
                             this.alertDangerShow = true;
                             console.log(error.data)
+
                             this.alertSuccessShow = false;
                             this.alert_message = error.response?.data?.message || "Registration failed"
                         }
