@@ -46,7 +46,7 @@
     </nav>
 
     <div id="app">
-        <form>
+        <form @submit.prevent="add_products">
             <div class="mb-3">
                 <label for="p_name" class="form-label">Product Name</label>
                 <input type="text" v-model="product_name" class="form-control" id="p_name"
@@ -62,7 +62,7 @@
                 <input type="number" v-model="selling_price" class="form-control" id="s_price"
                     placeholder="Enter the Selling Price">
             </div>
-            <button @click="add_products" type="submit" class="btn btn-primary">Add Products</button>
+            <button type="submit" class="btn btn-primary">Add Products</button>
 
             <div class="alert alert-success" v-if="alertSuccessShow">
                 {{ alert_message }}
@@ -85,12 +85,13 @@
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="prod in products" :key="prod.id">
-                    <td>{{ prod.id }}</td>
-                    <td>{{ prod.product_name }}</td>
-                    <td>{{ prod.buying_price }}</td>
-                    <td>{{ prod.selling_price }}</td>
-                    <td>{{ prod.created_at }}</td>
+                <tr v-for="(product, index) in products" :key="product.id">
+                    <td>{{ index + 1 }}</td>
+                    <td>{{ product.product_name }}</td>
+                    <!-- formats the amount when being displayed --eg from 1000000 to 1,000,000 the commas -->
+                    <td>{{ product.buying_price.toLocaleString() }}</td>
+                    <td>{{ product.selling_price.toLocaleString() }}</td>
+                    <td>{{ product.created_at }}</td>
                     <td><button type="button" class="btn btn-primary" data-bs-toggle="modal"
                             :data-bs-target="'#editproduct' + prod.id">
                             Edit
@@ -138,14 +139,12 @@
         </table>
     </div>
 
-    <!-- jQuery CDN -->
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <!-- datatables -->
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <!-- vue cdn link -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.2.0/vue.js"></script>
     <!-- axios link -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.25.0/axios.js"></script>
+    <!-- jQuery CDN -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <!-- bootstrap link -->
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
         integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
@@ -153,9 +152,8 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js"
         integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y"
         crossorigin="anonymous"></script>
-    <!-- <script>
-        new DataTable('#mytable');
-    </script> -->
+    <!-- datatables -->
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script>
         new Vue({
             el: "#app",
@@ -171,10 +169,20 @@
             },
             methods: {
                 //headers is a vue method for called when  --- used in products and sales page
-                getHeaders() {
+                get_headers() {
                     return {
                         Authorization: `Bearer ${localStorage.getItem("token")}`
                     }
+                },
+                mounted() {
+                    if (!localStorage.getItem("token")) {
+                        window.location.href = "login.html";
+                        return
+                    }
+                    // .parse converts json string into object format sice local storage only accepts strings and text
+                    const user = JSON.parse(localStorage.getItem("user") || "{}")
+                    this.user_name = user.full_name || user.email || ""
+                    this.get_products()
                 },
                 async add_products() {
                     if (this.product_name === "" || this.buying_price === "" || this.selling_price === "") {
@@ -191,35 +199,52 @@
                             selling_price: parseFloat(this.selling_price)
                         }, {
                             // tells the backend request to accept the request and it has the token required
-                            headers: this.getHeaders()
+                            headers: this.get_headers()
                         })
                         this.alertSuccessShow = true
                         this.alertDangerShow = false
                         this.alert_message = "Product added successfully!"
+                        await this.get_products()
                         // to avoid posting the same data twice
-                        this.full_name = ""
+                        this.product_name = ""
                         this.buying_price = ""
                         this.selling_price = ""
+                        setTimeout(() => window.location.href = "product.html", 1000)
 
                         console.log(response.data)
-                    } catch (error)  {
+                    } catch (error) {
+                        this.alertDangerShow = true;
+                        this.alertSuccessShow = false;
+
+                        console.log("ERROR:", error)
+                        console.log("STATUS:", error.response?.status)
+                        console.log("DATA:", error.response?.data)
+
+                        this.alert_message = error.response?.data?.message || "Failed to add a product."
+                    }
+                },
+                async get_products() {
+                    try {
+                        const response = await axios.get("http://127.0.0.1:5000/products", {
+                            headers: this.get_headers()
+                        })
+                        console.log("full_response:", response)
+                        console.log("products:", response.data)
+                        this.products = response.data
+                        // this.$nextTick(() => this.initTable())
+
+                    } catch (error) {
                         this.alertDangerShow = true;
                         console.log(error.data)
 
                         this.alertSuccessShow = false;
-                        this.alert_message = error.response?.data?.message || "Failed to add a product."
-                        }
-                    
+                        this.alert_message = error.response?.data?.message || "Failed to get a product."
+                    }
+                },
+                formatDate(dt) {
+                    console.log("date_received:", dt)
+                    return new Date(dt).toLocaleString()
                 }
-            },
-            mounted() {
-                if (!localStorage.getItem("token")) {
-                    window.location.href = "login.html";
-                    return
-                }
-                // .parse converts json string into object format sice local storage only accepts strings and text
-                const user = JSON.parse(localStorage.getItem("user") || "{}")
-                this.user_name = user.full_name || user.email || ""
             }
         });
     </script>
