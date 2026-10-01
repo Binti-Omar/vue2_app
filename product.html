@@ -49,17 +49,20 @@
         <form @submit.prevent="add_products">
             <div class="mb-3">
                 <label for="p_name" class="form-label">Product Name</label>
-                <input type="text" v-model="product_name" class="form-control" id="p_name" placeholder="Enter the Product Name">
+                <input type="text" v-model="product_name" class="form-control" id="p_name"
+                    placeholder="Enter the Product Name">
             </div>
             <div class="mb-3">
                 <label for="b_price" class="form-label">Buying Price</label>
-                <input type="number" v-model="buying_price" class="form-control" id="b_price" placeholder="Enter the Buying Price">
+                <input type="number" v-model="buying_price" class="form-control" id="b_price"
+                    placeholder="Enter the Buying Price">
             </div>
             <div class="mb-3">
                 <label for="s_price" class="form-label">Selling Price</label>
-                <input type="number" v-model="selling_price" class="form-control" id="s_price" placeholder="Enter the Selling Price">
+                <input type="number" v-model="selling_price" class="form-control" id="s_price"
+                    placeholder="Enter the Selling Price">
             </div>
-            <button @click="add_products" type="submit" class="btn btn-primary">Add Products</button>
+            <button type="submit" class="btn btn-primary">Add Products</button>
 
             <div class="alert alert-success" v-if="alertSuccessShow">
                 {{ alert_message }}
@@ -69,7 +72,7 @@
                 {{ alert_message }}
             </div>
         </form>
-    
+
         <table class="table" id="mytable">
             <thead>
                 <tr>
@@ -87,8 +90,9 @@
                     <td>{{ prod.product_name }}</td>
                     <td>{{ prod.buying_price }}</td>
                     <td>{{ prod.selling_price }}</td>
+                    <td>{{ prod.created_at }}</td>
                     <td><button type="button" class="btn btn-primary" data-bs-toggle="modal"
-                            data-bs-target="#editproduct'editproduct' + prod.id">
+                            :data-bs-target="'#editproduct' + prod.id">
                             Edit
                         </button>
                         <!-- Modal -->
@@ -105,16 +109,18 @@
                                         <form>
                                             <div class="mb-3">
                                                 <label for="name" class="form-label">Product Name</label>
-                                                <input
-                                                type="text" :value=" prod.product_name" class="form-control" id="name">
+                                                <input type="text" :value=" prod.product_name" class="form-control"
+                                                    id="name">
                                             </div>
                                             <div class="mb-3">
                                                 <label for="b_price" class="form-label">Buying Price</label>
-                                                <input type="number" :value="prod.buying_price"  class="form-control" id="b_price">
+                                                <input type="number" :value="prod.buying_price" class="form-control"
+                                                    id="b_price">
                                             </div>
                                             <div class="mb-3">
                                                 <label for="s_price" class="form-label">Selling Price</label>
-                                                <input type="number" :value="prod.selling_price" class="form-control" id="s_price">
+                                                <input type="number" :value="prod.selling_price" class="form-control"
+                                                    id="s_price">
                                             </div>
                                             <button type="submit" class="btn btn-primary">Save Changes</button>
                                         </form>
@@ -152,43 +158,60 @@
     </script> -->
     <script>
         new Vue({
-            el : "#app",
-            data : {
-                product_name : "",
-                buying_price : "",
-                selling_price : "",
-                user_name : "",
+            el: "#app",
+            data: {
+                product_name: "",
+                buying_price: "",
+                selling_price: "",
+                user_name: "",
                 alert_message: "",
                 alertSuccessShow: false,
                 alertDangerShow: false,
                 products: []
             },
-            methods : {
+            methods: {
                 //headers is a vue method for called when
-                headers (){
-                    return{
-                        Authorisation : `Bearer $ {localstorage.getItem("token")}`
+                headers() {
+                    return {
+                        Authorization: `Bearer ${localStorage.getItem("token")}`
                     }
                 },
-                async add_products(){
-                    if(this.product_name === "" || this.buying_price === "" || this.selling_price === ""){
-                        alertDangerShow = true
-                        alertSuccessShow = false
-                        alert_message = "All fields must be filled!!!"
+                async add_products() {
+                    if (this.product_name === "" || this.buying_price === "" || this.selling_price === "") {
+                        this.alertDangerShow = true
+                        this.alertSuccessShow = false
+                        this.alert_message = "All fields must be filled!!!"
                         return
                     }
-                    await axios.post("http://127.0.0.1:5000/products",{
-                       console
-                    })
+                    try {
+                        const response = await axios.post("http://127.0.0.1:5000/products", {
+                            product_name: this.product_name,
+                            buying_price: this.buying_price,
+                            selling_price: this.selling_price
+                        }, {
+                            headers: this.headers()
+                        })
+                        this.alertSuccessShow = true
+                        this.alertDangerShow = false
+                        this.alert_message = "Product added successfully!"
+
+                        console.log(response.data)
+                    } catch (error)  {
+                        this.alertDangerShow = true;
+                        console.log(error.data)
+                        this.alertSuccessShow = false;
+                        this.alert_message = error.response?.data?.message || "Failed to add product."
+                        }
+                    
                 }
             },
-            mounted(){
-                if(!localStorage.getItem("token")){
+            mounted() {
+                if (!localStorage.getItem("token")) {
                     window.location.href = "login.html"
                     return
                 }
                 const user = JSON.parse(localStorage.getItem("user") || "{}")
-                this.user_name = user.full_name || user.email || "" 
+                this.user_name = user.full_name || user.email || ""
             }
         });
     </script>
