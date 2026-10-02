@@ -91,13 +91,13 @@
                     <!-- formats the amount when being displayed --eg from 1000000 to 1,000,000 the commas -->
                     <td>{{ product.buying_price.toLocaleString() }}</td>
                     <td>{{ product.selling_price.toLocaleString() }}</td>
-                    <td>{{ product.created_at }}</td>
+                    <td>{{ formatDate(product.created_at) }}</td>
                     <td><button type="button" class="btn btn-primary" data-bs-toggle="modal"
-                            :data-bs-target="'#editproduct' + prod.id">
+                            :data-bs-target="'#editproduct' + product.id">
                             Edit
                         </button>
                         <!-- Modal -->
-                        <div class="modal fade" :id="'editproduct' + prod.id" tabindex="-1"
+                        <div class="modal fade" :id="'editproduct' + product.id" tabindex="-1"
                             aria-labelledby="exampleModalLabel" aria-hidden="true">
                             <div class="modal-dialog">
                                 <div class="modal-content">
@@ -110,17 +110,17 @@
                                         <form>
                                             <div class="mb-3">
                                                 <label for="name" class="form-label">Product Name</label>
-                                                <input type="text" :value=" prod.product_name" class="form-control"
+                                                <input type="text" :value=" product.product_name" class="form-control"
                                                     id="name">
                                             </div>
                                             <div class="mb-3">
                                                 <label for="b_price" class="form-label">Buying Price</label>
-                                                <input type="number" :value="prod.buying_price" class="form-control"
+                                                <input type="number" :value="product.buying_price" class="form-control"
                                                     id="b_price">
                                             </div>
                                             <div class="mb-3">
                                                 <label for="s_price" class="form-label">Selling Price</label>
-                                                <input type="number" :value="prod.selling_price" class="form-control"
+                                                <input type="number" :value="product.selling_price" class="form-control"
                                                     id="s_price">
                                             </div>
                                             <button type="submit" class="btn btn-primary">Save Changes</button>
@@ -174,16 +174,6 @@
                         Authorization: `Bearer ${localStorage.getItem("token")}`
                     }
                 },
-                mounted() {
-                    if (!localStorage.getItem("token")) {
-                        window.location.href = "login.html";
-                        return
-                    }
-                    // .parse converts json string into object format sice local storage only accepts strings and text
-                    const user = JSON.parse(localStorage.getItem("user") || "{}")
-                    this.user_name = user.full_name || user.email || ""
-                    this.get_products()
-                },
                 async add_products() {
                     if (this.product_name === "" || this.buying_price === "" || this.selling_price === "") {
                         this.alertDangerShow = true
@@ -231,7 +221,9 @@
                         console.log("full_response:", response)
                         console.log("products:", response.data)
                         this.products = response.data
-                        // this.$nextTick(() => this.initTable())
+                        // this.$nextTick(() => {
+                        //     $('#mytable').DataTable();
+                        // });
 
                     } catch (error) {
                         this.alertDangerShow = true;
@@ -245,7 +237,17 @@
                     console.log("date_received:", dt)
                     return new Date(dt).toLocaleString()
                 }
-            }
+            },
+            mounted() {
+                    if (!localStorage.getItem("token")) {
+                        window.location.href = "login.html";
+                        return
+                    }
+                    // .parse converts json string into object format sice local storage only accepts strings and text
+                    const user = JSON.parse(localStorage.getItem("user") || "{}")
+                    this.user_name = user.full_name || user.email || ""
+                    this.get_products()
+                },
         });
     </script>
 
