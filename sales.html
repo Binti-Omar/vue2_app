@@ -46,30 +46,33 @@
     </nav>
 
     <div id="app">
-        <form>
-            <div class="mb-3">
-                <label for="user_id" class="form-label">User ID</label>
-                <input type="number" class="form-control" id="user_id" placeholder="Enter the User ID">
-            </div>
-            <button type="submit" class="btn btn-primary">Submit</button>
-        </form>
-    
+        <div class="alert alert-success" v-if="alertSuccessShow">
+            {{ alert_message }}
+        </div>
+
+        <div class="alert alert-danger" v-if="alertDangerShow">
+            {{ alert_message }}
+        </div>
+
         <table class="table">
             <thead>
                 <tr>
                     <th scope="col">ID</th>
+                    <th>User ID</th>
+                    <th>Sale Date</th>
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <th scope="row">1</th>
-                    <td>1</td>
+                <tr v-for="sale in sales">
+                    <th>{{ sale.id }}</th>
+                    <td>{{ sale.user_id }}</td>
+                    <td>{{ formatDate(sale.sale_date)}}</td>
                 </tr>
             </tbody>
         </table>
     </div>
 
-<!-- vue cdn link -->
+    <!-- vue cdn link -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.2.0/vue.js"></script>
     <!-- axios link -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.25.0/axios.js"></script>
@@ -88,11 +91,46 @@
     <script>
         new Vue({
             el: "#app",
-            data:{
-
+            data: {
+                sales: [],
+                alert_message: "",
+                alertSuccessShow: false,
+                alertDangerShow: false
             },
-            methods:{
-                
+            methods: {
+                get_headers() {
+                    return {
+                        Authorization: `Bearer ${localStorage.getItem("token")}`
+                    }
+                },
+                async get_sales() {
+                    try {
+                        const response = await axios.get("http://127.0.0.1:5000/sales", {
+                            headers: this.get_headers()
+                        })
+                        console.log("full_response:", response)
+                        console.log("sales:", response.data)
+                        this.sales = response.data
+
+                    } catch (error) {
+                        this.alertDangerShow = true;
+                        console.log(error.data)
+
+                        this.alertSuccessShow = false;
+                        this.alert_message = error.response?.data?.message || "Failed to get sales."
+                    }
+                },
+                formatDate(dt) {
+                    console.log("date_received:", dt)
+                    return new Date(dt).toLocaleString()
+                }
+            },
+            mounted() {
+                if (!localStorage.getItem("token")) {
+                    window.location.href = "login.html";
+                    return
+                }
+                this.get_sales()
             }
         })
     </script>
