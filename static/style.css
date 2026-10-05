@@ -188,7 +188,6 @@ body {
     overflow: hidden;
     box-shadow: 0 3px 12px rgba(0, 0, 0, 0.1);
 }
-
 #mytable thead {
     background-color: #063b70;
     color: white;
@@ -201,3 +200,123 @@ body {
 #mytable tbody tr:hover {
     background-color: #fff5eb;
 }
+/* DASHBOARD PAGE */
+.dashboard-container {
+    padding: 100px 40px 40px;
+    background-color: #f5f3ee;
+    min-height: 100vh;
+}
+.dashboard-heading {
+    margin-bottom: 30px;
+}
+.dashboard-heading h1 {
+    color: #222;
+    font-size: 32px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+.dashboard-heading p {
+    color: #777;
+    margin: 0;
+}
+.dashboard-card {
+    background-color: white;
+    border-radius: 12px;
+    padding: 25px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    min-height: 130px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transition: 0.3s ease;
+}
+.dashboard-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+}
+.dashboard-icon {
+    width: 55px;
+    height: 55px;
+    border-radius: 12px;
+    background-color: #f0dfb0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #8a6500;
+    font-size: 22px;
+    flex-shrink: 0;
+}
+.dashboard-card h6 {
+    color: #777;
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+.dashboard-card h2 {
+    color: #222;
+    font-size: 25px;
+    font-weight: bold;
+    margin: 0;
+}
+.dashboard-panel {
+    background-color: white;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+.panel-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+.panel-heading h4 {
+    color: #222;
+    font-weight: bold;
+    margin: 0;
+}
+.panel-heading a {
+    color: #8a6500;
+    text-decoration: none;
+    font-weight: 500;
+}
+.panel-heading a:hover {
+    color: #b8860b;
+    text-decoration: underline;
+}
+.quick-action {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    margin-bottom: 12px;
+    border-radius: 8px;
+    background-color: #f7f5ef;
+    color: #333;
+    text-decoration: none;
+    transition: 0.3s ease;
+}
+.quick-action i {
+    width: 25px;
+    color: #8a6500;
+    font-size: 18px;
+}
+.quick-action:hover {
+    background-color: #f0dfb0;
+    color: #222;
+    transform: translateX(5px);
+}
+.dashboard-container .alert {
+    margin-bottom: 20px;
+}
+@media (max-width: 768px) {
+    .dashboard-container {
+        padding: 100px 20px 30px;
+    }
+    .dashboard-heading h1 {
+        font-size: 26px;
+    }
+    .dashboard-card {
+        min-height: 110px;
+    }
+}
+

@@ -4,9 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Dashboard</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.0/css/all.min.css">
 </head>
 
 <body>
@@ -22,7 +24,7 @@
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <ul class="navbar-nav">
                     <li class="nav-item">
-                        <a class="nav-link" aria-current="page" href="index.html">Home</a>
+                        <a class="nav-link" href="index.html">Home</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="product.html">Products</a>
@@ -31,27 +33,193 @@
                         <a class="nav-link" href="sales.html">Sales</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="dashboard.html">Dashboard</a>
+                        <a class="nav-link active" href="dashboard.html">Dashboard</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="register.html">Register</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active" href="login.html">Login</a>
+                        <a class="nav-link" href="login.html">Login</a>
                     </li>
                 </ul>
             </div>
         </div>
     </nav>
 
-    <h1>DASHBOARD</h1>
+    <div id="app" class="dashboard-container">
 
+        <div class="alert alert-success" v-if="alertSuccessShow">
+            {{ alert_message }}
+        </div>
+        <div class="alert alert-danger" v-if="alertDangerShow">
+            {{ alert_message }}
+        </div>
+
+        <div class="dashboard-heading">
+            <h1>Duka POS Dashboard</h1>
+            <p>
+                Overview of your shop
+            </p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-3">
+                <div class="dashboard-card">
+                    <div class="dashboard-icon">
+                        <i class="fa-solid fa-box"></i>
+                    </div>
+
+                    <div>
+                        <h6>Total Products</h6>
+                        <h2>{{ total_products }}</h2>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-3">
+                <div class="dashboard-card">
+                    <div class="dashboard-icon">
+                        <i class="fa-solid fa-cart-shopping"></i>
+                    </div>
+
+                    <div>
+                        <h6>Total Sales</h6>
+                        <h2>{{ total_sales }}</h2>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-3">
+                <div class="dashboard-card">
+                    <div class="dashboard-icon">
+                        <i class="fa-solid fa-warehouse"></i>
+                    </div>
+
+                    <div>
+                        <h6>Total Stock</h6>
+                        <h2>{{ total_stock }}</h2>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-3">
+                <div class="dashboard-card">
+                    <div class="dashboard-icon">
+                        <i class="fa-solid fa-chart-line"></i>
+                    </div>
+
+                    <div>
+                        <h6>Total Profit</h6>
+                        <h2>Ksh {{ total_profit }}</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="dashboard-panel">
+            <h4>Quick Actions</h4>
+
+            <a href="product.html" class="quick-action">
+                <i class="fa-solid fa-plus"></i>
+                Add Product
+            </a>
+
+            <a href="sales.html" class="quick-action">
+                <i class="fa-solid fa-cart-plus"></i>
+                View Sales
+            </a>
+
+            <a href="product.html" class="quick-action">
+                <i class="fa-solid fa-box"></i>
+                View Products
+            </a>
+        </div>
+    </div>
+
+    <!-- vue cdn link -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.2.0/vue.js"></script>
+    <!-- axios link -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.25.0/axios.js"></script>
+    <!-- bootstrap -->
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
         integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
         crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js"
         integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y"
         crossorigin="anonymous"></script>
+
+
+    <script>
+        new Vue({
+            el: "#app",
+            data: {
+                total_products: 0,
+                total_sales: 0,
+                total_stock: 0,
+                total_profit: 0,
+                alert_message: "",
+                alertSuccessShow: false,
+                alertDangerShow: false
+            },
+            methods: {
+                get_headers() {
+                    return {
+                        Authorization:
+                            `Bearer ${localStorage.getItem("token")}`
+                    }
+                },
+                async get_dashboard_data() {
+                    try {
+                        const sales_response =
+                            await axios.get(
+                                "http://127.0.0.1:5000/sales",
+                                {
+                                    headers:
+                                        this.get_headers()
+                                }
+                            )
+                        this.total_sales =
+                            sales_response.data.length
+                        const products_response =
+                            await axios.get(
+                                "http://127.0.0.1:5000/products",
+                                {
+                                    headers:
+                                        this.get_headers()
+                                }
+                            )
+                        this.total_products =
+                            products_response.data.length
+                    }
+                    catch (error) {
+                        console.log(error)
+                        this.alertDangerShow = true
+                        this.alertSuccessShow = false
+                        this.alert_message =
+                            error.response?.data?.message ||
+                            "Failed to load dashboard."
+                    }
+                },
+                formatDate(dt) {
+                    return new Date(dt)
+                        .toLocaleString()
+                }
+            },
+            mounted() {
+                if (!localStorage.getItem("token")) {
+                    window.location.href =
+                        "login.html"
+                    return
+                }
+                this.get_dashboard_data()
+            }
+        });
+
+    </script>
+
 </body>
 
 </html>
+```

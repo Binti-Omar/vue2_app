@@ -46,6 +46,21 @@
     </nav>
 
     <div id="app">
+        <form @submit.prevent="add_sales">
+            <div class="mb-3">
+                <label for="name" class="form-label">Product Name</label>
+                <input type="text" v-model="product_name" class="form-control" id="name" aria-describedby="emailHelp">
+            </div>
+            <div class="mb-3">
+                <label for="amount" class="form-label">Amount</label>
+                <input type="number" v-model="amount" class="form-control" id="amount">
+            </div>
+            <!-- <div class="mb-3 form-check">
+    <input type="checkbox" class="form-check-input" id="exampleCheck1">
+    <label class="form-check-label" for="exampleCheck1">Check me out</label>
+  </div> -->
+            <button type="submit" class="btn btn-primary">Add Sales</button>
+        </form>
         <div class="alert alert-success" v-if="alertSuccessShow">
             {{ alert_message }}
         </div>
@@ -54,18 +69,20 @@
             {{ alert_message }}
         </div>
 
-        <table class="table">
+        <table class="table" id="mytable">
             <thead>
                 <tr>
                     <th scope="col">ID</th>
-                    <th>User ID</th>
+                    <th>product Name</th>
+                    <th>Amount</th>
                     <th>Sale Date</th>
                 </tr>
             </thead>
             <tbody>
                 <tr v-for="sale in sales">
                     <th>{{ sale.id }}</th>
-                    <td>{{ sale.user_id }}</td>
+                    <td>{{ sale.product_name }}</td>
+                    <td>{{ sale.amount.toLocaleString() }}</td>
                     <td>{{ formatDate(sale.sale_date)}}</td>
                 </tr>
             </tbody>
@@ -93,15 +110,52 @@
             el: "#app",
             data: {
                 sales: [],
+                product_name:"",
+                amount:"",
                 alert_message: "",
                 alertSuccessShow: false,
-                // alertDangerShow: false
+                alertDangerShow: false
             },
             methods: {
                 get_headers() {
                     return {
                         Authorization: `Bearer ${localStorage.getItem("token")}`
                     }
+                },
+                async add_sales(){
+                    if (this.product_name === "" || this.amount=== "") {
+                        this.alertDangerShow = true
+                        this.alertSuccessShow = false
+                        this.alert_message = "All fields must be filled!!!"
+                        return
+                    }
+                    try {
+                        const response = await axios.post("http://127.0.0.1:5000/sales", {
+                            product_name : this.product_name,
+                            amount: parseFloat(this.amount)
+                        },{
+                            headers: this.get_headers()
+                        })
+                        this.alertSuccessShow = true
+                        this.alertDangerShow = false
+                        this.alert_message = "Sales added successfully!"
+                        await this.get_sales()
+                        // to avoid posting the same data twice
+                        this.product_name = ""
+                        this.amount = ""
+                        setTimeout(() => window.location.href = "product.html", 1000)
+
+                        console.log(response.data)
+                    } catch (error) {
+                        this.alertDangerShow = true;
+                        this.alertSuccessShow = false;
+
+                        console.log("ERROR:", error)
+                        console.log("STATUS:", error.response?.status)
+                        console.log("DATA:", error.response?.data)
+
+                        this.alert_message = error.response?.data?.message || "Failed to add a sale."
+                    } 
                 },
                 async get_sales() {
                     try {
@@ -111,7 +165,9 @@
                         console.log("full_response:", response)
                         console.log("sales:", response.data)
                         this.sales = response.data
-
+                        this.$nextTick(() => {
+                            $('#mytable').DataTable();
+                        });
                     } catch (error) {
                         this.alertDangerShow = true;
                         console.log(error.data)

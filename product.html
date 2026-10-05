@@ -222,10 +222,9 @@
                         console.log("full_response:", response)
                         console.log("products:", response.data)
                         this.products = response.data
-                        // this.$nextTick(() => {
-                        //     $('#mytable').DataTable();
-                        // });
-
+                        this.$nextTick(() => {
+                            $('#mytable').DataTable();
+                        });
                     } catch (error) {
                         this.alertDangerShow = true;
                         console.log(error.data)
