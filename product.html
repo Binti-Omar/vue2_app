@@ -92,7 +92,7 @@
                     <td>{{ product.buying_price.toLocaleString() }}</td>
                     <td>{{ product.selling_price.toLocaleString() }}</td>
                     <td>{{ formatDate(product.created_at) }}</td>
-                    <td><button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                    <td><button @click="open_model(product)" type="button" class="btn btn-primary" data-bs-toggle="modal"
                             :data-bs-target="'#editproduct' + product.id">
                             Edit
                         </button>
@@ -107,23 +107,28 @@
                                             aria-label="Close"></button>
                                     </div>
                                     <div class="modal-body">
-                                        <form>
+                                        <form @submit.prevent="edit_product" method="post">
+                                            <div class="mb-3">
+                                                <label for="id" class="form-label">Product ID</label>
+                                                <input type="hidden" v-model=" product.product_id" class="form-control"
+                                                    id="id">
+                                            </div>
                                             <div class="mb-3">
                                                 <label for="name" class="form-label">Product Name</label>
-                                                <input type="text" :value=" product.product_name" class="form-control"
+                                                <input type="text" v-model=" product.product_name" class="form-control"
                                                     id="name">
                                             </div>
                                             <div class="mb-3">
                                                 <label for="b_price" class="form-label">Buying Price</label>
-                                                <input type="number" :value="product.buying_price" class="form-control"
+                                                <input type="number" v-model="product.buying_price" class="form-control"
                                                     id="b_price">
                                             </div>
                                             <div class="mb-3">
                                                 <label for="s_price" class="form-label">Selling Price</label>
-                                                <input type="number" :value="product.selling_price" class="form-control"
+                                                <input type="number" v-model="product.selling_price" class="form-control"
                                                     id="s_price">
                                             </div>
-                                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                                            <button @click="edit_product" type="submit" class="btn btn-primary">Save Changes</button>
                                         </form>
                                     </div>
                                     <div class="modal-footer">
@@ -154,7 +159,7 @@
         crossorigin="anonymous"></script>
     <!-- datatables -->
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    
+
     <script>
         new Vue({
             el: "#app",
@@ -163,6 +168,11 @@
                 buying_price: "",
                 selling_price: "",
                 user_name: "",
+                pending: null,
+                target: null,
+                edit_name: "",
+                edit_buying_price:"",
+                edit_selling_price:"",
                 alert_message: "",
                 alertSuccessShow: false,
                 alertDangerShow: false,
@@ -233,21 +243,53 @@
                         this.alert_message = error.response?.data?.message || "Failed to get a product."
                     }
                 },
+                async open_model(product) {
+                    this.pending = () => {
+                        this.target = products
+                        this.edit_name = product.product_name
+                        this.edit_buying_price = product.buying_price
+                        this.edit_selling_price = product.selling_price
+
+                        new bootstrap.Modal(document.getElementById("'editproduct' + product.id")).show()
+                    }
+                },
+                async edit_product(product) {
+                    try {
+                        const response = await axios.put(
+                            "http://127.0.0.1:5000/update_products",{
+                                id:this.target.id,
+                                product_name: product.product_name,
+                                buying_price: parseFloat(product.buying_price),
+                                selling_price: parseFloat(product.selling_price)
+                            },
+                            {
+                                headers: this.get_headers()
+                            }
+                        )
+
+                        console.log(response.data)
+
+                        await this.get_products()
+
+                    } catch (error) {
+                        console.log(error)
+                    }
+                },
                 formatDate(dt) {
                     console.log("date_received:", dt)
                     return new Date(dt).toLocaleString()
                 }
             },
             mounted() {
-                    if (!localStorage.getItem("token")) {
-                        window.location.href = "login.html";
-                        return
-                    }
-                    // .parse converts json string into object format sice local storage only accepts strings and text
-                    const user = JSON.parse(localStorage.getItem("user") || "{}")
-                    this.user_name = user.full_name || user.email || ""
-                    this.get_products()
-                },
+                if (!localStorage.getItem("token")) {
+                    window.location.href = "login.html";
+                    return
+                }
+                // .parse converts json string into object format sice local storage only accepts strings and text
+                const user = JSON.parse(localStorage.getItem("user") || "{}")
+                this.user_name = user.full_name || user.email || ""
+                this.get_products()
+            },
         });
     </script>
 
