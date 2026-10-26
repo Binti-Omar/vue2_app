@@ -49,16 +49,17 @@
         <form @submit.prevent="add_sales">
             <div class="mb-3">
                 <label for="name" class="form-label">Product Name</label>
-                <input type="text" v-model="product_name" class="form-control" id="name" aria-describedby="emailHelp">
+                <select id="name" v-model="selectedProductId" class="form-select">
+                    <option disabled value="">Select a product</option>
+                    <option v-for="product in products" :key="product.id" :value="product.id">
+                        {{ product.product_name }}
+                    </option>
+                </select>
             </div>
             <div class="mb-3">
                 <label for="amount" class="form-label">Amount</label>
                 <input type="number" v-model="amount" class="form-control" id="amount">
             </div>
-            <!-- <div class="mb-3 form-check">
-    <input type="checkbox" class="form-check-input" id="exampleCheck1">
-    <label class="form-check-label" for="exampleCheck1">Check me out</label>
-  </div> -->
             <button type="submit" class="btn btn-primary">Add Sales</button>
         </form>
         <div class="alert alert-success" v-if="alertSuccessShow">
@@ -76,14 +77,66 @@
                     <th>product Name</th>
                     <th>Amount</th>
                     <th>Sale Date</th>
+                    <th>Payment</th>
                 </tr>
             </thead>
             <tbody>
                 <tr v-for="sale in sales">
                     <th>{{ sale.id }}</th>
-                    <td>{{ sale.product_name }}</td>
+                    <td>{{ sale.product_id }}</td>
                     <td>{{ sale.amount.toLocaleString() }}</td>
                     <td>{{ formatDate(sale.sale_date)}}</td>
+                    <td><!-- Button trigger modal -->
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                            data-bs-target="#exampleModal">
+                            Make Payment
+                        </button>
+
+                        <!-- Modal -->
+                        <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+                            aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h1 class="modal-title fs-5" id="exampleModalLabel">Payment Modal</h1>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                            aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <form>
+                                            <div class="mb-3">
+                                                <label for="phone_number" class="form-label">Phone number</label>
+                                                <input type="number" class="form-control" id="phone_number">
+                                            </div>
+                                        </form>
+                                    </div>
+                                    
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th scope="col">ID</th>
+                                                <th scope="col">Transaction code</th>
+                                                <th scope="col">Amount</th>
+                                                <th scope="col">Phone number</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <th scope="row">1</th>
+                                                <td>Mark</td>
+                                                <td>Otto</td>
+                                                <td>@mdo</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <div class="modal-footer">
+                                        <button type="submit" class="btn btn-primary">Make STK Push</button>
+                                        <button type="button" class="btn btn-primary">Close</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
                 </tr>
             </tbody>
         </table>
@@ -110,8 +163,21 @@
             el: "#app",
             data: {
                 sales: [],
-                product_name:"",
-                amount:"",
+                products: [],
+                selectedProductId: "",
+                product_name: "",
+                amount: "",
+                current_saleID: null,
+                current_sale_name: "",
+                phone_number: "",
+                current_sale_amount: 0,
+                current_payment: null,
+                current_payment_pending: false,
+                current_payment_completed: false,
+                current_payment_failed: false,
+                stk_error_message: "",
+                stk_success_message: "",
+                stk_message: "",
                 alert_message: "",
                 alertSuccessShow: false,
                 alertDangerShow: false
@@ -122,8 +188,8 @@
                         Authorization: `Bearer ${localStorage.getItem("token")}`
                     }
                 },
-                async add_sales(){
-                    if (this.product_name === "" || this.amount=== "") {
+                async add_sales() {
+                    if (this.selectedProductId === "" || this.amount === "") {
                         this.alertDangerShow = true
                         this.alertSuccessShow = false
                         this.alert_message = "All fields must be filled!!!"
@@ -131,9 +197,9 @@
                     }
                     try {
                         const response = await axios.post("http://127.0.0.1:5000/sales", {
-                            product_name : this.product_name,
+                            product_id: this.selectedProductId,
                             amount: parseFloat(this.amount)
-                        },{
+                        }, {
                             headers: this.get_headers()
                         })
                         this.alertSuccessShow = true
@@ -141,9 +207,9 @@
                         this.alert_message = "Sales added successfully!"
                         await this.get_sales()
                         // to avoid posting the same data twice
-                        this.product_name = ""
+                        this.selectedProductId = ""
                         this.amount = ""
-                        setTimeout(() => window.location.href = "product.html", 1000)
+                        setTimeout(() => window.location.href = "sales.html", 1000)
 
                         console.log(response.data)
                     } catch (error) {
@@ -155,7 +221,7 @@
                         console.log("DATA:", error.response?.data)
 
                         this.alert_message = error.response?.data?.message || "Failed to add a sale."
-                    } 
+                    }
                 },
                 async get_sales() {
                     try {
@@ -176,6 +242,17 @@
                         this.alert_message = error.response?.data?.message || "Failed to get sales."
                     }
                 },
+                async get_products() {
+                    try {
+                        const response = await axios.get("http://127.0.0.1:5000/products", {
+                            headers: this.get_headers()
+                        });
+                        this.products = response.data;
+                    } catch (error) {
+                        this.alertDangerShow = true;
+                        this.alert_message = error.response?.data?.message || "Failed to load products.";
+                    }
+                },
                 formatDate(dt) {
                     console.log("date_received:", dt)
                     return new Date(dt).toLocaleString()
@@ -187,6 +264,7 @@
                     return
                 }
                 this.get_sales()
+                this.get_products()
             }
         })
     </script>

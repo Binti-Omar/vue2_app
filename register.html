@@ -117,7 +117,6 @@
                         // return stops the method(register_user) from running hence axios won't make a request when fields are empty
                         return
                     }
-                    // method 1
                     await axios.post("http://127.0.0.1:5000/register",
                         {
                             full_name: this.full_name,
@@ -126,7 +125,7 @@
                             phone_number: this.phone_number
                         }
                     )
-                        // response is to store he actual response from the api
+                        // response is to store the actual response from the api
                         // .then runs if axos request is successful
                         .then((response) => {
                             this.alertDangerShow = false;
