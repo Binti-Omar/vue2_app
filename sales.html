@@ -49,9 +49,9 @@
         <form @submit.prevent="add_sales">
             <div class="mb-3">
                 <label for="name" class="form-label">Product Name</label>
-                <select id="name" v-model="selectedProductId" class="form-select">
+                <select id="name" v-model="selectedProductname" class="form-select">
                     <option disabled value="">Select a product</option>
-                    <option v-for="product in products" :key="product.id" :value="product.id">
+                    <option v-for="product in products" :key="product.id" :value="product.name">
                         {{ product.product_name }}
                     </option>
                 </select>
@@ -203,7 +203,7 @@
             data: {
                 sales: [],
                 products: [],
-                selectedProductId: "",
+                selectedProductname: "",
                 product_name: "",
                 amount: "",
                 current_saleID: null,
@@ -216,7 +216,6 @@
                 current_payment_failed: false,
                 stk_error_message: "",
                 stk_success_message: "",
-                stk_message: "",
                 alert_message: "",
                 alertSuccessShow: false,
                 alertDangerShow: false
@@ -228,7 +227,7 @@
                     }
                 },
                 async add_sales() {
-                    if (this.selectedProductId === "" || this.amount === "") {
+                    if (this.selectedProductname === "" || this.amount === "") {
                         this.alertDangerShow = true
                         this.alertSuccessShow = false
                         this.alert_message = "All fields must be filled!!!"
@@ -236,7 +235,7 @@
                     }
                     try {
                         const response = await axios.post("http://127.0.0.1:5000/sales", {
-                            product_id: this.selectedProductId,
+                            product_id: this.selectedProductname,
                             amount: parseFloat(this.amount)
                         }, {
                             headers: this.get_headers()
@@ -246,7 +245,7 @@
                         this.alert_message = "Sales added successfully!"
                         await this.get_sales()
                         // to avoid posting the same data twice
-                        this.selectedProductId = ""
+                        this.selectedProductname = ""
                         this.amount = ""
                         setTimeout(() => window.location.href = "sales.html", 1000)
 
