@@ -76,16 +76,55 @@
                     <th scope="col">ID</th>
                     <th>product Name</th>
                     <th>Amount</th>
+                    <th>Payment status</th>
                     <th>Sale Date</th>
+                    <th>Actions</th>
                     <th>Payment</th>
                 </tr>
             </thead>
             <tbody>
                 <tr v-for="sale in sales">
                     <th>{{ sale.id }}</th>
-                    <td>{{ sale.product_id }}</td>
+                    <td>{{ sale.product_name }}</td>
                     <td>{{ sale.amount.toLocaleString() }}</td>
+                    <td>{{ sale.payment_status }}</td>
                     <td>{{ formatDate(sale.sale_date)}}</td>
+                    <td><button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                            :data-bs-target="'#editsale' + sales.id">
+                            Edit
+                        </button>
+                        <!-- Modal -->
+                        <div class="modal fade" :id="'editsale' + sales.id" tabindex="-1"
+                            aria-labelledby="exampleModalLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h1 class="modal-title fs-5" id="exampleModalLabel">Sales</h1>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                            aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <form @submit.prevent="edit_sale" method="post">
+                                            <div class="mb-3">
+                                                <label for="name" class="form-label">Product name</label>
+                                                <input type="hidden" v-model=" sales.product_name" class="form-control"
+                                                    id="name">
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="amount" class="form-label">Amount</label>
+                                                <input type="hidden" v-model=" sales.amount" class="form-control"
+                                                    id="amount">
+                                            </div>
+                                            <button @click="edit_sale" type="submit" class="btn btn-primary">Edit Sale
+                                                </button>
+                                                <button type="submit" class="btn btn-secondary"
+                                            data-bs-dismiss="modal">Close</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
                     <td><!-- Button trigger modal -->
                         <button type="button" class="btn btn-primary" data-bs-toggle="modal"
                             data-bs-target="#exampleModal">
@@ -108,30 +147,30 @@
                                                 <label for="phone_number" class="form-label">Phone number</label>
                                                 <input type="number" class="form-control" id="phone_number">
                                             </div>
+
+                                            <table class="table">
+                                                <thead>
+                                                    <tr>
+                                                        <th scope="col">ID</th>
+                                                        <th scope="col">Transaction code</th>
+                                                        <th scope="col">Amount</th>
+                                                        <th scope="col">Phone number</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <th scope="row">1</th>
+                                                        <td>Mark</td>
+                                                        <td>Otto</td>
+                                                        <td>@mdo</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                            <div class="modal-footer">
+                                                <button type="submit" class="btn btn-primary">Make STK Push</button>
+                                                <button type="submit" class="btn btn-primary">Close</button>
+                                            </div>
                                         </form>
-                                    </div>
-                                    
-                                    <table class="table">
-                                        <thead>
-                                            <tr>
-                                                <th scope="col">ID</th>
-                                                <th scope="col">Transaction code</th>
-                                                <th scope="col">Amount</th>
-                                                <th scope="col">Phone number</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <th scope="row">1</th>
-                                                <td>Mark</td>
-                                                <td>Otto</td>
-                                                <td>@mdo</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                    <div class="modal-footer">
-                                        <button type="submit" class="btn btn-primary">Make STK Push</button>
-                                        <button type="button" class="btn btn-primary">Close</button>
                                     </div>
                                 </div>
                             </div>
@@ -251,6 +290,25 @@
                     } catch (error) {
                         this.alertDangerShow = true;
                         this.alert_message = error.response?.data?.message || "Failed to load products.";
+                    }
+                },
+                async edit_sale(sale) {
+                    try {
+                        const response = await axios.put(
+                            "http://127.0.0.1:5000/update_sales", {
+                            id: this.sales.id,
+                        },
+                            {
+                                headers: this.get_headers()
+                            }
+                        )
+
+                        console.log(response.data)
+
+                        await this.get_sales()
+
+                    } catch (error) {
+                        console.log(error)
                     }
                 },
                 formatDate(dt) {
