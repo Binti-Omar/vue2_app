@@ -165,7 +165,7 @@
                                     <div class="modal-header">
                                         <h1 class="modal-title fs-5" id="payment_modal">Payment Modal {{
                                             current_sale_name }}</h1>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        <button @click="reset_modal" type="button" class="btn-close" data-bs-dismiss="modal"
                                             aria-label="Close"></button>
                                     </div>
                                     <div class="modal-body">
@@ -194,7 +194,7 @@
                                                     id="phone_number" :disabled="current_payment_pending">
                                             </div>
 
-                                            <button class="btn btn-primary">
+                                            <button class="btn btn-primary" @click="new_push" :disabled="!phone_number || current_payment_pending">
                                                 Send STK Push (KES {{current_sale_amount.toLocaleString()}})
                                             </button>
                                         </div>
@@ -223,7 +223,7 @@
                                         </table>
                                         <div class="modal-footer">
                                             <button type="submit" class="btn btn-primary">Make STK Push</button>
-                                            <button type="submit" class="btn btn-primary">Close</button>
+                                            <button @click="reset_modal" type="submit" class="btn btn-primary">Close</button>
                                         </div>
                                     </div>
                                 </div>
@@ -362,14 +362,37 @@
                     this.stk_success_message = ""
                 },
                 async new_push(){
-
+                    this.stk_error_message= ""; this.stk_success_message = ""
+                    const phone = this.phone_number.trim()
+                    if(!phone){ this.stk_error_message = "Please enter a phone number."; return }
+                    try{
+                        axios.post("http://127.0.0.1:5000/stk_push",
+                            { phone_number: phone, sale_id: this.current_saleID, amount: this.current_sale_amount },
+                            { headers: this.get_headers() }
+                        )
+                        this.stk_success_message ="STK PUSH SENT!!!"
+                        this.phone_number = ""
+                        this.current_payment_pending = true
+                        this.current_payment_failed = false
+                        setTimeout(() => {this.current_payment_pending = false; this.current_payment_failed = true; this.stk_error_message = " STK Push timed out."}, 25000)
+                    }
+                    catch(err){
+                        if(err.response?.status === 401) window.location.href = login.html
+                        else this.stk_error_message = err.response?.data?.error || "Failed to send STK Push"
+                    }
+                },
+                reset_modal(){
+                    this.phone_number = ""
+                    this.stk_error_message = ""
+                    this.stk_success_message = ""
+                    this.current_payment_pending = false
+                    this.current_payment_failed = false
                 },
                 prepare_edit(sale) {
                     this.editingSaleId = sale.id;
                     this.editProductName = sale.product_name;
                     this.editAmount = sale.amount;
                 },
-
                 async edit_sale() {
                     try {
                         await axios.put("http://127.0.0.1:5000/update_sales", {
