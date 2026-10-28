@@ -51,7 +51,7 @@
                 <label for="name" class="form-label">Product Name</label>
                 <select id="name" v-model="selectedProductname" class="form-select">
                     <option disabled value="">Select a product</option>
-                    <option v-for="product in products" :key="product.id" :value="product.name">
+                    <option v-for="product in products" :key="product.id" :value="product.product_name">
                         {{ product.product_name }}
                     </option>
                 </select>
@@ -83,18 +83,18 @@
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="sale in sales">
+                <tr v-for="sale in sales" :key="sale.id">
                     <th>{{ sale.id }}</th>
                     <td>{{ sale.product_name }}</td>
                     <td>{{ sale.amount.toLocaleString() }}</td>
                     <td>{{ sale.payment_status }}</td>
                     <td>{{ formatDate(sale.sale_date)}}</td>
-                    <td><button type="button" class="btn btn-primary" data-bs-toggle="modal"
-                            :data-bs-target="'#editsale' + sales.id">
+                    <td><button @click="prepare_edit(sale)" type="button" class="btn btn-primary" data-bs-toggle="modal"
+                            :data-bs-target="'#editsale' + sale.id">
                             Edit
                         </button>
                         <!-- Modal -->
-                        <div class="modal fade" :id="'editsale' + sales.id" tabindex="-1"
+                        <div class="modal fade" :id="'editsale' + sale.id" tabindex="-1"
                             aria-labelledby="exampleModalLabel" aria-hidden="true">
                             <div class="modal-dialog">
                                 <div class="modal-content">
@@ -107,70 +107,124 @@
                                         <form @submit.prevent="edit_sale" method="post">
                                             <div class="mb-3">
                                                 <label for="name" class="form-label">Product name</label>
-                                                <input type="hidden" v-model=" sales.product_name" class="form-control"
-                                                    id="name">
+                                                <input type="text" v-model="editProductName" class="form-control">
                                             </div>
                                             <div class="mb-3">
                                                 <label for="amount" class="form-label">Amount</label>
-                                                <input type="hidden" v-model=" sales.amount" class="form-control"
-                                                    id="amount">
+                                                <input type="number" v-model="editAmount" class="form-control">
                                             </div>
-                                            <button @click="edit_sale" type="submit" class="btn btn-primary">Edit Sale
-                                                </button>
-                                                <button type="submit" class="btn btn-secondary"
-                                            data-bs-dismiss="modal">Close</button>
+                                            <button type="submit" class="btn btn-primary">Edit Sale
+                                            </button>
+                                            <button type="submit" class="btn btn-secondary"
+                                                data-bs-dismiss="modal">Close</button>
                                         </form>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </td>
-                    <td><!-- Button trigger modal -->
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal"
-                            data-bs-target="#exampleModal">
-                            Make Payment
-                        </button>
 
+                        <!-- delete modal -->
+                        <button type="button" class="btn btn-danger" data-bs-toggle="modal"
+                            :data-bs-target="'#deletesale' + sale.id" @click="deletingSaleId = sale.id">
+                            Delete
+                        </button>
                         <!-- Modal -->
-                        <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
-                            aria-hidden="true">
+                        <div class="modal fade" :id="'deletesale' + sale.id" tabindex="-1"
+                            aria-labelledby="exampleModalLabel" aria-hidden="true">
                             <div class="modal-dialog">
                                 <div class="modal-content">
                                     <div class="modal-header">
-                                        <h1 class="modal-title fs-5" id="exampleModalLabel">Payment Modal</h1>
+                                        <h1 class="modal-title fs-5" id="exampleModalLabel">Sales</h1>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal"
                                             aria-label="Close"></button>
                                     </div>
                                     <div class="modal-body">
-                                        <form>
+                                        <p>Delete sale #{{ deletingSaleId }}?</p>
+
+                                        <button type="button" class="btn btn-danger" @click="delete_sale">
+                                            Delete Sale
+                                        </button>
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                            Cancel
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <!-- payment model -->
+                    <td><button @click="open_payment_modal(sale)" type="button" class="btn btn-primary"
+                            data-bs-toggle="modal" data-bs-target="#payment_modal">
+                            Make Payment
+                        </button>
+
+                        <!-- Modal -->
+                        <div class="modal fade" id="payment_modal" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h1 class="modal-title fs-5" id="payment_modal">Payment Modal {{
+                                            current_sale_name }}</h1>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                            aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="alert alert-danger" v-if="stk_error_message">
+                                            {{ stk_error_message }}
+                                        </div>
+
+                                        <div class="alert alert-success" v-if="stk_success_message">
+                                            {{ stk_success_message }}
+                                        </div>
+
+                                        <div v-if="current_payment_pending" class="alert alert-warning">
+                                            STK Push sent to customer.Enter pin
+                                        </div>
+
+                                        <div v-else="current_payment_failed" class="alert alert-info">
+                                            Payment not completed.Resend STK Push
+                                        </div>
+
+                                        <div v-if="!current_payment_completed">
+                                            Request M-pesa Payment
+
                                             <div class="mb-3">
                                                 <label for="phone_number" class="form-label">Phone number</label>
-                                                <input type="number" class="form-control" id="phone_number">
+                                                <input type="tel" v-model="phone_number" class="form-control"
+                                                    id="phone_number" :disabled="current_payment_pending">
                                             </div>
 
-                                            <table class="table">
-                                                <thead>
-                                                    <tr>
-                                                        <th scope="col">ID</th>
-                                                        <th scope="col">Transaction code</th>
-                                                        <th scope="col">Amount</th>
-                                                        <th scope="col">Phone number</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <tr>
-                                                        <th scope="row">1</th>
-                                                        <td>Mark</td>
-                                                        <td>Otto</td>
-                                                        <td>@mdo</td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
-                                            <div class="modal-footer">
-                                                <button type="submit" class="btn btn-primary">Make STK Push</button>
-                                                <button type="submit" class="btn btn-primary">Close</button>
-                                            </div>
-                                        </form>
+                                            <button class="btn btn-primary">
+                                                Send STK Push (KES {{current_sale_amount.toLocaleString()}})
+                                            </button>
+                                        </div>
+
+                                        <h4>Payment Records</h4>
+                                        <table class="table">
+                                            <thead>
+                                                <tr>
+                                                    <th scope="col">ID</th>
+                                                    <th scope="col">Transaction code</th>
+                                                    <th scope="col">Amount</th>
+                                                    <th scope="col">Phone number</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr v-if="current_payment">
+                                                    <td>1</td>
+                                                    <td>{{ current_payment ? current_payment.transaction_code : "_" }}</td>
+                                                    <td>{{current_payment ? current_payment.amount.toLocaleString() : "_" }}</td>
+                                                    <td>{{current_payment ? current_payment.phone_number : "_" }}</td>
+                                                </tr>
+                                                <tr v-else>
+                                                    <td colspan="4" class="text-center">No payment record found</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                        <div class="modal-footer">
+                                            <button type="submit" class="btn btn-primary">Make STK Push</button>
+                                            <button type="submit" class="btn btn-primary">Close</button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -206,6 +260,10 @@
                 selectedProductname: "",
                 product_name: "",
                 amount: "",
+                editingSaleId: null,
+                editProductName: "",
+                editAmount: "",
+                deletingSaleId: null,
                 current_saleID: null,
                 current_sale_name: "",
                 phone_number: "",
@@ -235,7 +293,7 @@
                     }
                     try {
                         const response = await axios.post("http://127.0.0.1:5000/sales", {
-                            product_id: this.selectedProductname,
+                            product_name: this.selectedProductname,
                             amount: parseFloat(this.amount)
                         }, {
                             headers: this.get_headers()
@@ -291,23 +349,60 @@
                         this.alert_message = error.response?.data?.message || "Failed to load products.";
                     }
                 },
-                async edit_sale(sale) {
+                open_payment_modal(sale) {
+                    this.current_saleID = sale.id
+                    this.current_sale_name = sale.product ? sale.product_name : "_"
+                    this.current_sale_amount = sale.product ? sale.amount : 0
+                    this.current_sale_complete = sale.payment && sale.payment.status === "complete"
+                    this.current_payment_pending = sale.payment && sale.payment.status === "pending"
+                    this.current_sale_failed = sale.payment && sale.payment.status === "failed"
+                    this.current_payment = sale.payment || null
+                    this.phone_number = ""
+                    this.stk_error_message = ""
+                    this.stk_success_message = ""
+                },
+                async new_push(){
+
+                },
+                prepare_edit(sale) {
+                    this.editingSaleId = sale.id;
+                    this.editProductName = sale.product_name;
+                    this.editAmount = sale.amount;
+                },
+
+                async edit_sale() {
                     try {
-                        const response = await axios.put(
-                            "http://127.0.0.1:5000/update_sales", {
-                            id: this.sales.id,
-                        },
-                            {
-                                headers: this.get_headers()
-                            }
-                        )
+                        await axios.put("http://127.0.0.1:5000/update_sales", {
+                            id: this.editingSaleId,
+                            product_name: this.editProductName,
+                            amount: parseFloat(this.editAmount)
+                        }, {
+                            headers: this.get_headers()
+                        });
 
-                        console.log(response.data)
-
-                        await this.get_sales()
-
+                        await this.get_sales();
+                        bootstrap.Modal.getInstance(
+                            document.getElementById("editsale" + this.editingSaleId)
+                        )?.hide();
                     } catch (error) {
-                        console.log(error)
+                        console.log(error.response?.data || error);
+                    }
+                },
+                async delete_sale() {
+                    try {
+                        await axios.delete(
+                            `http://127.0.0.1:5000/delete_sales/${this.deletingSaleId}`,
+                            { headers: this.get_headers() }
+                        );
+
+                        await this.get_sales();
+
+                        const modal = bootstrap.Modal.getInstance(
+                            document.getElementById("deletesale" + this.deletingSaleId)
+                        );
+                        if (modal) modal.hide();
+                    } catch (error) {
+                        console.log(error.response?.data || error);
                     }
                 },
                 formatDate(dt) {
