@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg">
+        <div class="container-fluid">
+            <img class="logo" src="static/images/logo.png" alt="logo">
+            <a class="navbar-brand" href="#">Duka POS</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
+                aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="index.html">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="product.html">Products</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="sales.html">Sales</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="dashboard.html">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="register.html">Register</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="login.html">Login</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div id="app">
+        <form @submit.prevent="add_sales">
+            <div class="mb-3">
+                <label for="name" class="form-label">Product Name</label>
+                <select id="name" v-model="selectedProductname" class="form-select">
+                    <option disabled value="">Select a product</option>
+                    <option v-for="product in products" :key="product.id" :value="product.product_name">
+                        {{ product.product_name }}
+                    </option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="amount" class="form-label">Amount</label>
+                <input type="number" v-model="amount" class="form-control" id="amount">
+            </div>
+            <button type="submit" class="btn btn-primary">Add Sales</button>
+        </form>
+        <div class="alert alert-success" v-if="alertSuccessShow">
+            {{ alert_message }}
+        </div>
+
+        <div class="alert alert-danger" v-if="alertDangerShow">
+            {{ alert_message }}
+        </div>
+
+        <table class="table" id="mytable">
+            <thead>
+                <tr>
+                    <th scope="col">ID</th>
+                    <th>product Name</th>
+                    <th>Amount</th>
+                    <th>Payment status</th>
+                    <th>Sale Date</th>
+                    <th>Actions</th>
+                    <th>Payment</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="(sale, index) in sales" :key="sale.id">
+                    <th>{{ index + 1 }}</th>
+                    <td>{{ sale.product_name }}</td>
+                    <td>{{ sale.amount.toLocaleString() }}</td>
+                    <td>{{ sale.payment_status }}</td>
+                    <td>{{ formatDate(sale.sale_date)}}</td>
+                    <td><button @click="prepare_edit(sale)" type="button" class="btn btn-primary" data-bs-toggle="modal"
+                            :data-bs-target="'#editsale' + sale.id">
+                            Edit
+                        </button>
+                        <!-- Modal -->
+                        <div class="modal fade" :id="'editsale' + sale.id" tabindex="-1"
+                            aria-labelledby="exampleModalLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h1 class="modal-title fs-5" id="exampleModalLabel">Sales</h1>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                            aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <form @submit.prevent="edit_sale" method="post">
+                                            <div class="mb-3">
+                                                <label for="name" class="form-label">Product name</label>
+                                                <input type="text" v-model="editProductName" class="form-control">
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="amount" class="form-label">Amount</label>
+                                                <input type="number" v-model="editAmount" class="form-control">
+                                            </div>
+                                            <button type="submit" class="btn btn-primary">Edit Sale
+                                            </button>
+                                            <button type="submit" class="btn btn-secondary"
+                                                data-bs-dismiss="modal">Close</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- delete modal -->
+                        <button @click="deletingSaleId = sale.id" type="button" class="btn btn-danger"
+                            data-bs-toggle="modal" :data-bs-target="'#deletesale' + sale.id">
+                            Delete
+                        </button>
+                        <!-- Modal -->
+                        <div class="modal fade" :id="'deletesale' + sale.id" tabindex="-1"
+                            aria-labelledby="exampleModalLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h1 class="modal-title fs-5" id="exampleModalLabel">Sales</h1>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                            aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Delete sale #{{ deletingSaleId }}?</p>
+
+                                        <button @click="delete_sale" type="button" class="btn btn-danger">
+                                            Delete Sale
+                                        </button>
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                            Cancel
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <!-- payment model -->
+                    <td><button @click="open_payment_modal(sale)" type="button" class="btn btn-primary"
+                            data-bs-toggle="modal" data-bs-target="#payment_modal">
+                            Make Payment
+                        </button>
+
+                        <!-- Modal -->
+                        <div class="modal fade" id="payment_modal" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h1 class="modal-title fs-5" id="payment_modal">Payment Modal {{
+                                            current_sale_name }}</h1>
+                                        <button @click="reset_modal" type="button" class="btn-close"
+                                            data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="alert alert-danger" v-if="stk_error_message">
+                                            {{ stk_error_message }}
+                                        </div>
+
+                                        <div class="alert alert-success" v-if="stk_success_message">
+                                            {{ stk_success_message }}
+                                        </div>
+
+                                        <div v-if="current_payment_pending" class="alert alert-warning">
+                                            STK Push sent to customer.Enter pin
+                                        </div>
+
+                                        <div v-else="current_payment_failed" class="alert alert-info">
+                                            Payment not completed.Resend STK Push
+                                        </div>
+
+                                        <div v-if="!current_payment_completed">
+                                            Request M-pesa Payment
+
+                                            <div class="mb-3">
+                                                <label for="phone_number" class="form-label">Phone number</label>
+                                                <input type="tel" v-model="phone_number" class="form-control"
+                                                    id="phone_number" :disabled="current_payment_pending">
+                                            </div>
+
+                                            <button class="btn btn-primary" @click="new_push"
+                                                :disabled="!phone_number || current_payment_pending">
+                                                Send STK Push (KES {{current_sale_amount.toLocaleString()}})
+                                            </button>
+                                        </div>
+
+                                        <h4>Payment Records</h4>
+                                        <table class="table">
+                                            <thead>
+                                                <tr>
+                                                    <th scope="col">ID</th>
+                                                    <th scope="col">Transaction code</th>
+                                                    <th scope="col">Amount</th>
+                                                    <th scope="col">Phone number</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr v-if="current_payment">
+                                                    <td>1</td>
+                                                    <td>{{ current_payment ? current_payment.transaction_code : "_" }}
+                                                    </td>
+                                                    <td>{{current_payment ? current_payment.amount.toLocaleString() :
+                                                        "_" }}</td>
+                                                    <td>{{current_payment ? current_payment.phone_number : "_" }}</td>
+                                                </tr>
+                                                <tr v-else>
+                                                    <td colspan="4" class="text-center">No payment record found</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                        <div class="modal-footer">
+                                            <button type="submit" class="btn btn-primary">Make STK Push</button>
+                                            <button @click="reset_modal" type="submit"
+                                                class="btn btn-primary">Close</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- vue cdn link -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.2.0/vue.js"></script>
+    <!-- axios link -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.25.0/axios.js"></script>
+    <!-- jQuery CDN -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- bootstrap link -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
+        integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js"
+        integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y"
+        crossorigin="anonymous"></script>
+    <!-- datatables -->
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+    <script>
+        new Vue({
+            el: "#app",
+            data: {
+                sales: [],
+                products: [],
+                selectedProductname: "",
+                product_name: "",
+                amount: "",
+                editingSaleId: null,
+                editProductName: "",
+                editAmount: "",
+                deletingSaleId: null,
+                current_saleID: null,
+                current_sale_name: "",
+                phone_number: "",
+                current_sale_amount: 0,
+                current_payment: null,
+                current_payment_pending: false,
+                current_payment_completed: false,
+                current_payment_failed: false,
+                stk_error_message: "",
+                stk_success_message: "",
+                alert_message: "",
+                alertSuccessShow: false,
+                alertDangerShow: false
+            },
+            methods: {
+                get_headers() {
+                    return {
+                        Authorization: `Bearer ${localStorage.getItem("token")}`
+                    }
+                },
+                async add_sales() {
+                    if (this.selectedProductname === "" || this.amount === "") {
+                        this.alertDangerShow = true
+                        this.alertSuccessShow = false
+                        this.alert_message = "All fields must be filled!!!"
+                        return
+                    }
+                    try {
+                        const response = await axios.post("http://127.0.0.1:5000/sales", {
+                            product_name: this.selectedProductname,
+                            amount: parseFloat(this.amount)
+                        }, {
+                            headers: this.get_headers()
+                        })
+                        this.alertSuccessShow = true
+                        this.alertDangerShow = false
+                        this.alert_message = "Sales added successfully!"
+                        await this.get_sales()
+                        // to avoid posting the same data twice
+                        this.selectedProductname = ""
+                        this.amount = ""
+                        setTimeout(() => window.location.href = "sales.html", 1000)
+
+                        console.log(response.data)
+                    } catch (error) {
+                        this.alertDangerShow = true;
+                        this.alertSuccessShow = false;
+
+                        console.log("ERROR:", error)
+                        console.log("STATUS:", error.response?.status)
+                        console.log("DATA:", error.response?.data)
+
+                        this.alert_message = error.response?.data?.message || "Failed to add a sale."
+                    }
+                },
+                async get_sales() {
+                    try {
+                        const response = await axios.get("http://127.0.0.1:5000/sales", {
+                            headers: this.get_headers()
+                        })
+                        console.log("full_response:", response)
+                        console.log("sales:", response.data)
+                        this.sales = response.data
+                        this.$nextTick(() => {
+                            $('#mytable').DataTable();
+                        });
+                    } catch (error) {
+                        this.alertDangerShow = true;
+                        console.log(error.data)
+
+                        this.alertSuccessShow = false;
+                        this.alert_message = error.response?.data?.message || "Failed to get sales."
+                    }
+                },
+                async get_products() {
+                    try {
+                        const response = await axios.get("http://127.0.0.1:5000/products", {
+                            headers: this.get_headers()
+                        });
+                        this.products = response.data;
+                    } catch (error) {
+                        this.alertDangerShow = true;
+                        this.alert_message = error.response?.data?.message || "Failed to load products.";
+                    }
+                },
+                open_payment_modal(sale) {
+                    this.current_saleID = sale.id
+                    // this.current_sale_name = sale.product ? sale.product_name : "_"
+                    // this.current_sale_amount = sale.product ? sale.amount : 0
+                    this.current_sale_name = sale.product_name || "_";
+                    this.current_sale_amount = sale.amount || 0;
+                    this.current_sale_complete = sale.payment && sale.payment.status === "complete"
+                    this.current_payment_pending = sale.payment && sale.payment.status === "pending"
+                    this.current_sale_failed = sale.payment && sale.payment.status === "failed"
+                    this.current_payment = sale.payment || null
+                    this.phone_number = ""
+                    this.stk_error_message = ""
+                    this.stk_success_message = ""
+                },
+                async new_push() {
+                    this.stk_error_message = ""; this.stk_success_message = ""
+                    const phone = this.phone_number.trim()
+                    if (!phone) { this.stk_error_message = "Please enter a phone number."; return }
+                    try {
+                        await axios.post("http://127.0.0.1:5000/stk_push",
+                            { phone_number: phone, sales_id: this.current_saleID, amount: this.current_sale_amount },
+                            { headers: this.get_headers() }
+                        );
+                        await this.get_sales();
+                        const updatedSale = this.sales.find(
+                            sale => sale.id === this.current_saleID
+                        );
+                        this.current_payment = updatedSale?.payment || null;
+                        this.stk_success_message = "STK PUSH SENT!!!"
+                        this.phone_number = ""
+                        this.current_payment_pending = true
+                        this.current_payment_failed = false
+                        setTimeout(() => { this.current_payment_pending = false; this.current_payment_failed = true; this.stk_error_message = " STK Push timed out." }, 50000)
+                    }
+                    catch (err) {
+                        if (err.response?.status === 401) window.location.href = login.html
+                        else this.stk_error_message = err.response?.data?.error || "Failed to send STK Push"
+                    }
+                },
+                reset_modal() {
+                    this.phone_number = ""
+                    this.stk_error_message = ""
+                    this.stk_success_message = ""
+                    this.current_payment_pending = false
+                    this.current_payment_failed = false
+                },
+                prepare_edit(sale) {
+                    this.editingSaleId = sale.id;
+                    this.editProductName = sale.product_name;
+                    this.editAmount = sale.amount;
+                },
+                async edit_sale() {
+                    try {
+                        await axios.put("http://127.0.0.1:5000/update_sales", {
+                            id: this.editingSaleId,
+                            product_name: this.editProductName,
+                            amount: parseFloat(this.editAmount)
+                        }, {
+                            headers: this.get_headers()
+                        });
+
+                        await this.get_sales();
+                        bootstrap.Modal.getInstance(
+                            document.getElementById("editsale" + this.editingSaleId)
+                        )?.hide();
+                    } catch (error) {
+                        console.log(error.response?.data || error);
+                    }
+                },
+                async delete_sale() {
+                    try {
+                        await axios.delete(
+                            `http://127.0.0.1:5000/delete_sales/${this.deletingSaleId}`,
+                            { headers: this.get_headers() }
+                        );
+
+                        await this.get_sales();
+
+                        const modal = bootstrap.Modal.getInstance(
+                            document.getElementById("deletesale" + this.deletingSaleId)
+                        );
+                        if (modal) modal.hide();
+                    } catch (error) {
+                        console.log(error.response?.data || error);
+                    }
+                },
+                formatDate(dt) {
+                    console.log("date_received:", dt)
+                    return new Date(dt).toLocaleString()
+                }
+            },
+            mounted() {
+                if (!localStorage.getItem("token")) {
+                    window.location.href = "login.html";
+                    return
+                }
+                this.get_sales()
+                this.get_products()
+            }
+        })
+    </script>
+</body>
+
+</html>

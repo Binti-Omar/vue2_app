@@ -358,7 +358,7 @@
                     // this.current_sale_name = sale.product ? sale.product_name : "_"
                     // this.current_sale_amount = sale.product ? sale.amount : 0
                     this.current_sale_name = sale.product_name || "_";
-                    this.current_sale_amount = sale.amount || 0; 
+                    this.current_sale_amount = sale.amount || 0;
                     this.current_sale_complete = sale.payment && sale.payment.status === "complete"
                     this.current_payment_pending = sale.payment && sale.payment.status === "pending"
                     this.current_sale_failed = sale.payment && sale.payment.status === "failed"
@@ -376,23 +376,55 @@
                             { phone_number: phone, sales_id: this.current_saleID, amount: this.current_sale_amount },
                             { headers: this.get_headers() }
                         );
-
-// Add these lines here
-await this.get_sales();
-const updatedSale = this.sales.find(
-    sale => sale.id === this.current_saleID
-);
+                        await this.get_sales();
+                        const updatedSale = this.sales.find(
+                            sale => sale.id === this.current_saleID
+                        );
+                        this.current_payment = updatedSale?.payment || null;
                         this.stk_success_message = "STK PUSH SENT!!!"
                         this.phone_number = ""
                         this.current_payment_pending = true
                         this.current_payment_failed = false
-                        setTimeout(() => { this.current_payment_pending = false; this.current_payment_failed = true; this.stk_error_message = " STK Push timed out." }, 50000)
+                        this.waitForPayment(this.current_saleID);
                     }
                     catch (err) {
                         if (err.response?.status === 401) window.location.href = login.html
                         else this.stk_error_message = err.response?.data?.error || "Failed to send STK Push"
                     }
                 },
+
+                async waitForPayment(saleId) {
+                    const maxChecks = 20; // Check for up to 1 minute
+
+                    for (let i = 0; i < maxChecks; i++) {
+                        await new Promise(resolve => setTimeout(resolve, 3000));
+
+                        await this.get_sales();
+
+                        const sale = this.sales.find(item => item.id === saleId);
+                        this.current_payment = sale?.payment || null;
+
+                        if (this.current_payment?.status === "complete") {
+                            this.current_payment_completed = true;
+                            this.current_payment_pending = false;
+                            this.current_payment_failed = false;
+                            return;
+                        }
+
+                        if (this.current_payment?.status === "failed") {
+                            this.current_payment_pending = false;
+                            this.current_payment_failed = true;
+                            return;
+                        }
+                    }
+
+                    this.current_payment_pending = false;
+                    this.current_payment_failed = true;
+                    this.stk_error_message =
+                        "Payment confirmation is taking longer than expected. Check again shortly.";
+                },
+
+
                 reset_modal() {
                     this.phone_number = ""
                     this.stk_error_message = ""
