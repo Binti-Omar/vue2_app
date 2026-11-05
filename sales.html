@@ -87,7 +87,8 @@
                     <th>{{ index + 1 }}</th>
                     <td>{{ sale.product_name }}</td>
                     <td>{{ sale.amount.toLocaleString() }}</td>
-                    <td>{{ sale.payment_status }}</td>
+                    <!-- The status line means if a payment exists, show its status; otherwise show “unpaid.” -->
+                    <td>{{ sale.payment ? sale.payment.status : "unpaid" }}</td>
                     <td>{{ formatDate(sale.sale_date)}}</td>
                     <td><button @click="prepare_edit(sale)" type="button" class="btn btn-primary" data-bs-toggle="modal"
                             :data-bs-target="'#editsale' + sale.id">
@@ -330,6 +331,7 @@
                         })
                         console.log("full_response:", response)
                         console.log("sales:", response.data)
+                        console.log("first sale:", response.data[0])
                         this.sales = response.data
                         this.$nextTick(() => {
                             $('#mytable').DataTable();
@@ -353,15 +355,16 @@
                         this.alert_message = error.response?.data?.message || "Failed to load products.";
                     }
                 },
+                //the sale means “the sale on this row.” stores the selected sale’s ID, name, amount, and existing payment details so the modal can display them.
                 open_payment_modal(sale) {
                     this.current_saleID = sale.id
                     // this.current_sale_name = sale.product ? sale.product_name : "_"
                     // this.current_sale_amount = sale.product ? sale.amount : 0
                     this.current_sale_name = sale.product_name || "_";
                     this.current_sale_amount = sale.amount || 0;
-                    this.current_sale_complete = sale.payment && sale.payment.status === "complete"
+                    this.current_payment_complete = sale.payment && sale.payment.status === "complete"
                     this.current_payment_pending = sale.payment && sale.payment.status === "pending"
-                    this.current_sale_failed = sale.payment && sale.payment.status === "failed"
+                    this.current_payment_failed = sale.payment && sale.payment.status === "failed"
                     this.current_payment = sale.payment || null
                     this.phone_number = ""
                     this.stk_error_message = ""
